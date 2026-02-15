@@ -1,0 +1,35 @@
+# Environment
+.env
+*.env.local
+cred.txt
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+
+# Node
+node_modules/
+dist/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Docker
+pgdata/
+chromadata/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

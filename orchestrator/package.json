@@ -1,0 +1,21 @@
+{
+  "name": "sql-agent-orchestrator",
+  "version": "1.0.0",
+  "description": "Node.js orchestrator for Agentic SQL Enterprise Assistant",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "node --watch src/index.js",
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "cors": "^2.8.5",
+    "jsonwebtoken": "^9.0.2",
+    "bcryptjs": "^2.4.3",
+    "bullmq": "^5.12.0",
+    "ioredis": "^5.4.1",
+    "axios": "^1.7.7",
+    "uuid": "^10.0.0",
+    "dotenv": "^16.4.5"
+  }
+}
