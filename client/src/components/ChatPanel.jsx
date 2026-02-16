@@ -1,12 +1,12 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Loader2, AlertTriangle, Database } from "lucide-react";
+import { Send, Loader2, AlertTriangle, Database, Menu } from "lucide-react";
 import { sendQuery } from "../services/api";
 import ThinkingState from "./ThinkingState";
 import SQLDisplay from "./SQLDisplay";
 import ResultTable from "./ResultTable";
 import ChartRenderer from "./ChartRenderer";
 
-export default function ChatPanel({ messages, setMessages, activeChatId, onFirstMessage }) {
+export default function ChatPanel({ messages, setMessages, activeChatId, onFirstMessage, onToggleSidebar }) {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef(null);
@@ -68,6 +68,20 @@ export default function ChatPanel({ messages, setMessages, activeChatId, onFirst
 
   return (
     <div className="flex flex-col h-full">
+      {/* Top bar with hamburger */}
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-800 bg-gray-900/50 backdrop-blur-sm">
+        <button
+          onClick={onToggleSidebar}
+          className="p-2 rounded-lg hover:bg-gray-800 text-gray-400 hover:text-white transition-colors"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+        <div className="flex items-center gap-2 text-sm font-medium text-gray-300">
+          <Database className="w-4 h-4 text-blue-400" />
+          {activeChatId ? "Chat" : "New Chat"}
+        </div>
+      </div>
+
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-6 space-y-6">
         {messages.length === 0 && (

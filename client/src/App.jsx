@@ -6,6 +6,7 @@ export default function App() {
   // Each chat = { id, title, messages: [] }
   const [chats, setChats] = useState([]);
   const [activeChatId, setActiveChatId] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const activeChat = chats.find((c) => c.id === activeChatId);
   const activeMessages = activeChat?.messages || [];
@@ -16,6 +17,7 @@ export default function App() {
 
   const handleSelectChat = (chatId) => {
     setActiveChatId(chatId);
+    setSidebarOpen(false); // close sidebar on mobile after selecting
   };
 
   const setMessages = (updater) => {
@@ -45,19 +47,30 @@ export default function App() {
   };
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen relative">
+      {/* Overlay when sidebar is open on mobile */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-20 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       <Sidebar
         chats={chats}
         activeChatId={activeChatId}
         onNewChat={handleNewChat}
         onSelectChat={handleSelectChat}
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
       />
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0">
         <ChatPanel
           messages={activeMessages}
           setMessages={setMessages}
           activeChatId={activeChatId}
           onFirstMessage={handleFirstMessage}
+          onToggleSidebar={() => setSidebarOpen((v) => !v)}
         />
       </div>
     </div>
