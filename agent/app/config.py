@@ -1,4 +1,5 @@
 from pydantic_settings import BaseSettings
+from typing import Optional
 
 
 class Settings(BaseSettings):
@@ -8,17 +9,20 @@ class Settings(BaseSettings):
     aws_region: str = "us-east-1"
     model_id: str = "us.anthropic.claude-sonnet-4-20250514-v1:0"
 
-    # PostgreSQL
+    # PostgreSQL — supports both DATABASE_URL (Neon) and individual params (Docker)
+    database_url: Optional[str] = None
     pg_host: str = "postgres"
     pg_port: int = 5432
     pg_user: str = "sqlagent"
     pg_password: str = "sqlagent_dev"
     pg_database: str = "retaildb"
 
-    # ChromaDB
+    # ChromaDB — "http" for Docker, "embedded" for cloud deployment
+    chroma_mode: str = "embedded"
     chroma_host: str = "chromadb"
     chroma_port: int = 8000
     chroma_collection: str = "schema_metadata"
+    chroma_persist_dir: str = "/tmp/chroma_data"
 
     # Agent behavior
     max_self_heal_attempts: int = 3

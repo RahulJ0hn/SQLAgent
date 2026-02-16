@@ -46,6 +46,7 @@ services:
         condition: service_started
     environment:
       PG_HOST: postgres
+      CHROMA_MODE: http
       CHROMA_HOST: chromadb
 
   orchestrator:
@@ -54,12 +55,9 @@ services:
       - "3000:3000"
     env_file: .env
     depends_on:
-      redis:
-        condition: service_healthy
       agent:
         condition: service_started
     environment:
-      REDIS_URL: redis://redis:6379
       AGENT_URL: http://agent:8080
 
   client:

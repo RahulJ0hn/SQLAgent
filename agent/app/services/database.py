@@ -14,17 +14,29 @@ class DatabaseService:
         self.pool: asyncpg.Pool | None = None
 
     async def connect(self, settings: Settings):
-        self.pool = await asyncpg.create_pool(
-            host=settings.pg_host,
-            port=settings.pg_port,
-            user=settings.pg_user,
-            password=settings.pg_password,
-            database=settings.pg_database,
-            min_size=2,
-            max_size=10,
-            statement_cache_size=0,
-        )
-        logger.info("PostgreSQL connection pool created")
+        if settings.database_url:
+            # Cloud deployment (e.g. Neon) — use connection string
+            self.pool = await asyncpg.create_pool(
+                dsn=settings.database_url,
+                min_size=2,
+                max_size=10,
+                statement_cache_size=0,
+                ssl="require",
+            )
+            logger.info("PostgreSQL pool created via DATABASE_URL")
+        else:
+            # Local Docker deployment — use individual params
+            self.pool = await asyncpg.create_pool(
+                host=settings.pg_host,
+                port=settings.pg_port,
+                user=settings.pg_user,
+                password=settings.pg_password,
+                database=settings.pg_database,
+                min_size=2,
+                max_size=10,
+                statement_cache_size=0,
+            )
+            logger.info("PostgreSQL pool created via host/port params")
 
     async def disconnect(self):
         if self.pool:

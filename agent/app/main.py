@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import Settings
 from app.services.database import DatabaseService
 from app.services.chroma import ChromaService
-from app.services.llm import get_llm, get_planner_llm, get_error_llm
+from app.services.llm import get_llm, get_planner_llm, get_error_llm, get_intent_llm
 from app.services.schema_reflector import SchemaReflector
 from app.guardrails.sql_validator import SQLValidator
 from app.graph.pipeline import build_agent_graph
@@ -48,12 +48,16 @@ async def lifespan(app: FastAPI):
         max_attempts=settings.max_self_heal_attempts,
     )
 
+    # Intent classifier LLM
+    intent_llm = get_intent_llm(settings)
+
     # Attach to app state for dependency injection
     app.state.agent = agent
     app.state.db = db
     app.state.chroma = chroma
     app.state.settings = settings
     app.state.schema_reflector = schema_reflector
+    app.state.intent_llm = intent_llm
 
     logger.info("Agent pipeline compiled and all services ready")
     yield
@@ -71,12 +75,18 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
+    import os
+    origins = [
+        "http://localhost:5173",
+        "http://localhost:3000",
+    ]
+    client_url = os.getenv("CLIENT_URL")
+    if client_url:
+        origins.append(client_url)
+
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=[
-            "http://localhost:5173",
-            "http://localhost:3000",
-        ],
+        allow_origins=origins,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],

@@ -14,10 +14,20 @@ class ChromaService:
         self.collection = None
 
     def connect(self, settings: Settings):
-        self.client = chromadb.HttpClient(
-            host=settings.chroma_host,
-            port=settings.chroma_port,
-        )
+        if settings.chroma_mode == "http":
+            # Docker deployment — connect to ChromaDB container
+            self.client = chromadb.HttpClient(
+                host=settings.chroma_host,
+                port=settings.chroma_port,
+            )
+            logger.info(f"ChromaDB HttpClient connected to {settings.chroma_host}:{settings.chroma_port}")
+        else:
+            # Cloud / embedded deployment — persist locally
+            self.client = chromadb.PersistentClient(
+                path=settings.chroma_persist_dir,
+            )
+            logger.info(f"ChromaDB PersistentClient at {settings.chroma_persist_dir}")
+
         self.collection = self.client.get_or_create_collection(
             name=settings.chroma_collection,
             metadata={"hnsw:space": "cosine"},

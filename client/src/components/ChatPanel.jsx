@@ -6,24 +6,6 @@ import SQLDisplay from "./SQLDisplay";
 import ResultTable from "./ResultTable";
 import ChartRenderer from "./ChartRenderer";
 
-// Simple conversational responses — no need to hit the SQL pipeline
-const CONVERSATIONAL_PATTERNS = [
-  { match: /^(hi|hello|hey|howdy|greetings)\b/i, response: "Hello! I'm your SQL Agent. Ask me anything about your data — customers, orders, products, subscriptions, or support tickets. I'll write the SQL, run it safely, and show you the results." },
-  { match: /^(help|what (can|do) you do|what help|how do you work|what are you)/i, response: "I'm an AI-powered SQL assistant. Here's what I can do:\n\n- Answer questions about your database in plain English\n- Generate and execute safe SQL queries\n- Visualize results with charts and tables\n- Auto-correct queries if they fail (up to 3 retries)\n\nJust ask a question like \"What are the top 10 customers by revenue?\" or \"Show monthly order trends\"." },
-  { match: /^(thanks|thank you|thx)\b/i, response: "You're welcome! Let me know if you have more questions about your data." },
-  { match: /^(bye|goodbye|see you)\b/i, response: "Goodbye! Feel free to come back anytime you need data insights." },
-];
-
-function getConversationalResponse(question) {
-  const trimmed = question.trim();
-  for (const pattern of CONVERSATIONAL_PATTERNS) {
-    if (pattern.match.test(trimmed)) {
-      return pattern.response;
-    }
-  }
-  return null;
-}
-
 export default function ChatPanel({ messages, setMessages, activeChatId, onFirstMessage }) {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -47,26 +29,7 @@ export default function ChatPanel({ messages, setMessages, activeChatId, onFirst
       timestamp: new Date(),
     };
 
-    // Check for conversational query first
-    const conversationalReply = getConversationalResponse(question);
-    if (conversationalReply) {
-      const assistantMsg = {
-        id: crypto.randomUUID(),
-        role: "assistant",
-        content: conversationalReply,
-        timestamp: new Date(),
-      };
-
-      if (!activeChatId) {
-        // Creates chat with both messages
-        onFirstMessage(userMsg, assistantMsg);
-      } else {
-        setMessages((prev) => [...prev, userMsg, assistantMsg]);
-      }
-      return;
-    }
-
-    // SQL query — send to agent pipeline
+    // Always send to the backend — LLM handles intent classification
     if (!activeChatId) {
       onFirstMessage(userMsg);
     } else {
@@ -80,7 +43,7 @@ export default function ChatPanel({ messages, setMessages, activeChatId, onFirst
         id: crypto.randomUUID(),
         role: "assistant",
         content: response.final_answer,
-        response,
+        response: response.type === "data" ? response : null,
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, assistantMsg]);
@@ -89,7 +52,7 @@ export default function ChatPanel({ messages, setMessages, activeChatId, onFirst
       const assistantMsg = {
         id: crypto.randomUUID(),
         role: "assistant",
-        content: `Sorry, I couldn't process that query. ${detail}`,
+        content: `Sorry, I couldn't process that. ${detail}`,
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, assistantMsg]);
@@ -100,7 +63,7 @@ export default function ChatPanel({ messages, setMessages, activeChatId, onFirst
 
   // Check if response has actual SQL data
   const hasSQLData = (response) => {
-    return response && response.sql && response.result && response.result.length > 0;
+    return response && response.type === "data" && response.sql && response.result && response.result.length > 0;
   };
 
   return (
@@ -145,10 +108,10 @@ export default function ChatPanel({ messages, setMessages, activeChatId, onFirst
               </div>
             ) : (
               <div className="space-y-4 max-w-4xl">
-                {/* Only show reasoning/SQL/charts for actual SQL queries */}
+                {/* Only show reasoning/SQL/charts for actual data queries */}
                 {hasSQLData(msg.response) && (
                   <>
-                    {msg.response.reasoning && (
+                    {msg.response.reasoning?.length > 0 && (
                       <ThinkingState steps={msg.response.reasoning} />
                     )}
 
@@ -186,7 +149,7 @@ export default function ChatPanel({ messages, setMessages, activeChatId, onFirst
         {loading && (
           <div className="flex items-center gap-3 text-gray-400 text-sm p-4">
             <Loader2 className="w-5 h-5 animate-spin text-blue-400" />
-            <span>Analyzing your question and generating SQL...</span>
+            <span>Processing your question...</span>
           </div>
         )}
 

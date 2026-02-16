@@ -13,7 +13,7 @@ router.post("/", async (req, res) => {
 
   try {
     const response = await axios.post(
-      `${config.agentUrl}/api/v1/query`,
+      `${config.agentUrl}/api/v1/chat`,
       { question, session_id },
       { timeout: 120000 }
     );
