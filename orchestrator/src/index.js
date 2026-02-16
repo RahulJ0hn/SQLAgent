@@ -14,7 +14,18 @@ const allowedOrigins = [
   "http://localhost:3000",
   process.env.CLIENT_URL,
 ].filter(Boolean);
-app.use(cors({ origin: allowedOrigins, credentials: true }));
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, curl, etc.)
+    if (!origin) return callback(null, true);
+    // Allow configured origins and any Vercel preview URLs
+    if (allowedOrigins.includes(origin) || origin.endsWith(".vercel.app")) {
+      return callback(null, true);
+    }
+    callback(new Error("Not allowed by CORS"));
+  },
+  credentials: true,
+}));
 app.use(express.json());
 app.use(rateLimiter);
 
